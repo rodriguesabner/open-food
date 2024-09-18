@@ -1,17 +1,15 @@
 import {
-  Controller,
-  Get,
   Body,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
   Put,
-  ValidationPipe,
   UsePipes,
-  UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductDto } from './dto/product.dto';
-import { ApiKeyGuard } from '../auth/guards/api-key.guard';
 
 @Controller('products')
 // @UseGuards(ApiKeyGuard)
@@ -21,7 +19,6 @@ export class ProductsController {
   @Get()
   //GET /products: Listar todos os produtos da base de dados, adicionar sistema de paginação para não sobrecarregar o REQUEST.
   async findAll() {
-    await this.productsService.handleSyncProducts();
     return { status: 'true' };
     // return this.productsService.findAll();
   }
