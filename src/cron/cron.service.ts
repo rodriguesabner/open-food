@@ -5,8 +5,8 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { CHALLENGE_API_TOKEN } from 'src/constants';
 
 @Injectable()
-class UtilsService {
-  private readonly logger = new Logger(UtilsService.name);
+class CronService {
+  private readonly logger = new Logger(CronService.name);
 
   constructor(
     @Inject(CHALLENGE_API_TOKEN)
@@ -161,4 +161,4 @@ class UtilsService {
   }
 }
 
-export { UtilsService };
+export { CronService };
