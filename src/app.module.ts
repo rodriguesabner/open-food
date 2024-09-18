@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { CronModule } from './cron/cron.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CronModule } from './cron/cron.module';
         pass: process.env.MONGO_PASS,
       }),
     }),
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

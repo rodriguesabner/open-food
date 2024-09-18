@@ -17,7 +17,7 @@ class CronService {
     private readonly cronUtils: CronUtils,
   ) {}
 
-  @Cron(process.env.CRON_EXPRESSION || CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_MINUTE)
   async handleSyncProducts() {
     const startTime = new Date();
     let productsProcessed = 0;
@@ -58,8 +58,10 @@ class CronService {
 
       await this.createLog('success', productsProcessed, startTime);
       this.logger.log('Products imported successfully.');
+      this.cronUtils.clearTmpDir();
     } catch (error) {
       this.logger.error('Error importing products', error);
+      this.cronUtils.clearTmpDir();
       await this.createLog(
         'failure',
         productsProcessed,

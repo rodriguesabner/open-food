@@ -20,7 +20,7 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  async findAll(@Param('page') page: number, @Param('limit') limit: number) {
+  async findAll(@Param('page') page?: number, @Param('limit') limit?: number) {
     return this.productsService.findAll(page, limit);
   }
 
@@ -32,7 +32,10 @@ export class ProductsController {
 
   @Put(':code')
   @UsePipes(new ValidationPipe({ transform: true }))
-  update(@Param('code') code: string, @Body() updateProductDto: ProductDto) {
+  update(
+    @Param('code') code: number,
+    @Body() updateProductDto: Partial<ProductDto>,
+  ) {
     return this.productsService.update(code, updateProductDto);
   }
 

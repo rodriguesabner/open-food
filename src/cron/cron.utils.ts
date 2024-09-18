@@ -3,6 +3,8 @@ import * as path from 'node:path';
 import { createGunzip } from 'node:zlib';
 import { Inject, Injectable } from '@nestjs/common';
 import { CHALLENGE_API_TOKEN } from '../constants';
+import { MailService } from '../mail/mail.service';
+import { ConfigService } from '@nestjs/config';
 import { Product } from '../products/schemas/products.schema';
 
 @Injectable()
@@ -10,6 +12,8 @@ class CronUtils {
   constructor(
     @Inject(CHALLENGE_API_TOKEN)
     private readonly httpRef: Axios.AxiosInstance,
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
   ) {}
 
   createTmpDir(): string {
@@ -99,6 +103,11 @@ class CronUtils {
       return await this.unzipFile(filePath);
     } catch (error) {
       console.error(`Error downloading ${file}:`, error);
+      this.mailService.sendMail(
+        this.configService.get('MAIL_TO'),
+        `Error on downloading file ${file}`,
+        JSON.stringify(error),
+      );
       return '';
     }
   }
