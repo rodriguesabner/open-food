@@ -1,163 +1,88 @@
-import * as path from 'node:path';
-import * as fs from 'node:fs';
-import { createGunzip } from 'node:zlib';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { CHALLENGE_API_TOKEN } from 'src/constants';
+import { Injectable, Logger } from '@nestjs/common';
+import { CronLog } from './schemas/cron.schema';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { Product } from '../products/schemas/products.schema';
+import { CronUtils } from './cron.utils';
 
 @Injectable()
 class CronService {
   private readonly logger = new Logger(CronService.name);
 
   constructor(
-    @Inject(CHALLENGE_API_TOKEN)
-    private readonly httpRef: Axios.AxiosInstance,
+    @InjectModel('CronLog')
+    private readonly cronLogModel: Model<CronLog>,
+    @InjectModel(Product.name) private readonly productModel: Model<Product>,
+    private readonly cronUtils: CronUtils,
   ) {}
 
-  createTmpDir(): string {
-    const tmpDir = this.getTmpDir();
-    this.clearTmpDir();
-    return tmpDir;
-  }
+  @Cron(CronExpression.EVERY_MINUTE)
+  async handleSyncProducts() {
+    const startTime = new Date();
+    let productsProcessed = 0;
 
-  clearTmpDir() {
-    const tmpDir = this.getTmpDir();
-
-    fs.readdirSync(tmpDir).forEach((file) =>
-      fs.unlinkSync(path.join(tmpDir, file)),
-    );
-  }
-
-  private getTmpDir(): string {
-    const tmpDir = path.join(__dirname, '..', '..', '..', 'tmp');
-    if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir);
-    return tmpDir;
-  }
-
-  async getJsonFilePaths(taskDownloads: string[]): Promise<string[]> {
-    const results = await Promise.allSettled(taskDownloads);
-
-    return results
-      .filter((res) => res.status === 'fulfilled')
-      .map((res) => (res as PromiseFulfilledResult<string>).value);
-  }
-
-  async processFiles(filePaths: string[]): Promise<any[]> {
-    const tasks = filePaths.map(this.processLargeJson.bind(this));
-    const results = await Promise.allSettled(tasks);
-    const products = results
-      .filter((res) => res.status === 'fulfilled')
-      .flatMap((res) => (res as PromiseFulfilledResult<any[]>).value);
-
-    return this.sanitizeProducts(products);
-  }
-
-  async processLargeJson(filePath: string): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const readStream = fs.createReadStream(filePath, { encoding: 'utf-8' });
-      let lines: string[] = [];
-      let buffer = '';
-
-      readStream.on('data', (chunk: string) => {
-        buffer += chunk.replace(/[;\r]/g, '').replaceAll(/\\"/g, '');
-        const splitLines = buffer.split('\n');
-
-        buffer = splitLines.pop() as string;
-        lines = lines.concat(splitLines);
-
-        if (lines.length >= 100) {
-          readStream.destroy();
-          lines = lines.slice(0, 100);
-        }
-      });
-
-      readStream.on('close', () => {
-        resolve(lines);
-      });
-
-      readStream.on('error', (err) => {
-        reject(`Error reading file: ${err}`);
-      });
-    });
-  }
-
-  /*
-   * Retorna lista de arquivos disponíveis para download
-   */
-  async fetchFilesList(): Promise<string[]> {
-    return ['products_01.json.gz'];
-    // const { data } = await this.httpRef.get('/index.txt');
-    // if (!data) throw new Error('Error getting files');
-    //
-    // return data.toString().trim().split('\n').filter(Boolean);
-  }
-
-  async downloadAndSaveFile(file: string, tmpDir: string): Promise<string> {
-    const filePath = path.join(tmpDir, file);
     try {
-      const response = await this.httpRef.get(`/${file}`, {
-        responseType: 'stream',
-      });
+      this.logger.log('Starting import products cron job');
+      const tmpDir = this.cronUtils.createTmpDir();
+      const tasksDownloadFile = [];
 
-      const data = response.data as NodeJS.ReadableStream;
-      await this.saveToFile(data, filePath);
-      return await this.unzipFile(filePath);
+      const files: string[] = await this.cronUtils.fetchFilesList();
+
+      this.logger.log('Downloading files... This may take a while.');
+
+      for (let i = 0; i < files.length; i++) {
+        tasksDownloadFile.push(
+          this.cronUtils.downloadAndSaveFile(files[i], tmpDir),
+        );
+      }
+
+      this.logger.log('Files downloaded. Processing files...');
+
+      const filePaths: string[] =
+        await this.cronUtils.getJsonFilePaths(tasksDownloadFile);
+
+      const products: any[] = await this.cronUtils.processFiles(filePaths);
+      productsProcessed = products.length;
+
+      this.logger.log('Products processed. Importing products...');
+
+      for (const product of products) {
+        const existingProduct = await this.productModel.findOne({
+          code: product.code,
+        });
+        if (!existingProduct) {
+          await this.productModel.create(product);
+        }
+      }
+
+      await this.createLog('success', productsProcessed, startTime);
+      this.logger.log('Products imported successfully.');
     } catch (error) {
-      console.error(`Error downloading ${file}:`, error);
-      return '';
+      this.logger.error('Error importing products', error);
+      await this.createLog(
+        'failure',
+        productsProcessed,
+        startTime,
+        error.message,
+      );
     }
   }
 
-  private async saveToFile(
-    stream: NodeJS.ReadableStream,
-    filePath: string,
-  ): Promise<void> {
-    const writer = fs.createWriteStream(filePath);
-
-    return new Promise((resolve, reject) => {
-      stream.pipe(writer).on('finish', resolve).on('error', reject);
+  async createLog(
+    status: string,
+    productsProcessed: number,
+    startedAt: Date,
+    error?: string,
+  ) {
+    const log = new this.cronLogModel({
+      status,
+      productsProcessed,
+      error,
+      startedAt,
+      endedAt: new Date(),
     });
-  }
-
-  async unzipFile(filePath: string): Promise<string> {
-    const outputPath = filePath.replace('.gz', '');
-
-    return new Promise((resolve, reject) => {
-      fs.createReadStream(filePath)
-        .pipe(createGunzip())
-        .pipe(fs.createWriteStream(outputPath))
-        .on('finish', () => {
-          fs.unlinkSync(filePath);
-          resolve(outputPath);
-        })
-        .on('error', reject);
-    });
-  }
-
-  sanitizeProducts(productsRaw: string[]) {
-    const products = [];
-    const sanitizeRaw = productsRaw.map((product) => JSON.parse(product));
-
-    for (const product of sanitizeRaw) {
-      products.push({
-        code: product.code,
-        status: 'published',
-        imported_t: new Date(),
-        productName: product.product_name,
-        quantity: product.quantity,
-        brands: product.brands,
-        categories: product.categories,
-        labels: product.labels,
-        ingredients: product.ingredients_text,
-        servingSize: product.serving_size,
-        servingQuantity: product.serving_quantity,
-        nutriscoreScore: product.nutriscore_score,
-        nutriscoreGrade: product.nutriscore_grade,
-        mainCategory: product.main_category,
-        imageUrl: product.image_url,
-      });
-    }
-
-    return products;
+    return log.save();
   }
 }
 

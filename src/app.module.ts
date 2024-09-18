@@ -5,11 +5,11 @@ import { ProductsModule } from './products/products.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { UtilsModule } from './utils/utils.module';
+import { CronModule } from './cron/cron.module';
 
 @Module({
   imports: [
-    UtilsModule,
+    CronModule,
     ProductsModule,
     AuthModule,
     ConfigModule.forRoot({
@@ -17,7 +17,10 @@ import { UtilsModule } from './utils/utils.module';
     }),
     MongooseModule.forRootAsync({
       useFactory: () => ({
+        dbName: process.env.MONGO_DB,
         uri: process.env.MONGO_URI,
+        user: process.env.MONGO_USER,
+        pass: process.env.MONGO_PASS,
       }),
     }),
   ],
