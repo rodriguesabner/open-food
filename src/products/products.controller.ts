@@ -1,49 +1,44 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
+  Body,
   Param,
+  Delete,
   Put,
-  UsePipes,
   ValidationPipe,
+  UsePipes,
+  UseGuards,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductDto } from './dto/product.dto';
+import { ApiKeyGuard } from '../auth/guards/api-key.guard';
+import { Product } from './schemas/products.schema';
 
 @Controller('products')
-// @UseGuards(ApiKeyGuard)
+@UseGuards(ApiKeyGuard)
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  //GET /products: Listar todos os produtos da base de dados, adicionar sistema de paginação para não sobrecarregar o REQUEST.
-  async findAll() {
-    return { status: 'true' };
-    // return this.productsService.findAll();
+  async findAll(@Param('page') page: number, @Param('limit') limit: number) {
+    return this.productsService.findAll(page, limit);
   }
 
   @Get(':code')
   @UsePipes(new ValidationPipe({ transform: true }))
-  //GET /products/:code: Obter a informação somente de um produto da base de dados
-  findOne(@Param('code') id: string) {
-    console.log(id);
-    // return this.productsService.findOne();
+  findOne(@Param('code') code: Partial<Product>) {
+    return this.productsService.findOne(code);
   }
 
   @Put(':code')
   @UsePipes(new ValidationPipe({ transform: true }))
-  // PUT /products/:code: Será responsável por receber atualizações do Projeto Web
-  update(@Param('code') id: string, @Body() updateProductDto: ProductDto) {
-    console.log(id, updateProductDto);
-    // return this.productsService.update(null);
+  update(@Param('code') code: string, @Body() updateProductDto: ProductDto) {
+    return this.productsService.update(code, updateProductDto);
   }
 
   @Delete(':code')
   @UsePipes(new ValidationPipe({ transform: true }))
-  // DELETE /products/:code: Mudar o status do produto para trash
-  remove(@Param('code') id: string) {
-    console.log(id);
-    // return this.productsService.changeStatus(null);
+  remove(@Param('code') code: Partial<ProductDto>) {
+    return this.productsService.changeStatus(code);
   }
 }

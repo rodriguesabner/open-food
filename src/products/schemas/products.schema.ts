@@ -6,7 +6,7 @@ export class Product extends Document {
   @Prop({ required: true })
   code: number;
   status: string;
-  imported_t: Date;
+  importedAt: Date;
   url: string;
   creator: string;
   createdAt: Date;
