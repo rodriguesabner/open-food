@@ -17,7 +17,7 @@ class CronService {
     private readonly cronUtils: CronUtils,
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(process.env.CRON_EXPRESSION || CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleSyncProducts() {
     const startTime = new Date();
     let productsProcessed = 0;
@@ -42,7 +42,7 @@ class CronService {
       const filePaths: string[] =
         await this.cronUtils.getJsonFilePaths(tasksDownloadFile);
 
-      const products: any[] = await this.cronUtils.processFiles(filePaths);
+      const products = await this.cronUtils.processFiles(filePaths);
       productsProcessed = products.length;
 
       this.logger.log('Products processed. Importing products...');

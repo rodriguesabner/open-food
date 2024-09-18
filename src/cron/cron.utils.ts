@@ -3,6 +3,7 @@ import * as path from 'node:path';
 import { createGunzip } from 'node:zlib';
 import { Inject, Injectable } from '@nestjs/common';
 import { CHALLENGE_API_TOKEN } from '../constants';
+import { Product } from '../products/schemas/products.schema';
 
 @Injectable()
 class CronUtils {
@@ -39,17 +40,17 @@ class CronUtils {
       .map((res) => (res as PromiseFulfilledResult<string>).value);
   }
 
-  async processFiles(filePaths: string[]): Promise<any[]> {
+  async processFiles(filePaths: string[]): Promise<Product[]> {
     const tasks = filePaths.map(this.processLargeJson.bind(this));
     const results = await Promise.allSettled(tasks);
     const products = results
       .filter((res) => res.status === 'fulfilled')
-      .flatMap((res) => (res as PromiseFulfilledResult<any[]>).value);
+      .flatMap((res) => (res as PromiseFulfilledResult<string[]>).value);
 
     return this.sanitizeProducts(products);
   }
 
-  async processLargeJson(filePath: string): Promise<any[]> {
+  async processLargeJson(filePath: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
       const readStream = fs.createReadStream(filePath, { encoding: 'utf-8' });
       let lines: string[] = [];
@@ -78,9 +79,6 @@ class CronUtils {
     });
   }
 
-  /*
-   * Retorna lista de arquivos disponíveis para download
-   */
   async fetchFilesList(): Promise<string[]> {
     return ['products_01.json.gz'];
     // const { data } = await this.httpRef.get('/index.txt');
