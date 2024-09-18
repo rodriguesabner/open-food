@@ -1,0 +1,1 @@
+export const CHALLENGE_API_TOKEN = Symbol('CHALLENGES_CODE_API');
