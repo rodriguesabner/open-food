@@ -30,7 +30,15 @@ This is a challenge by Coodesh
 
 ### Execução
 
+Crie o arquivo .env, deixe alguns itens já predefinidos.
+
+cp .env.template .env
+
+------
+
 Como estamos usando docker compose, não é necessário executar de forma manual.
+
+a API_KEY é: 51d5c2e9-45ea-4756-b879-22ffeeed0c36
 
 ### Testes
 
