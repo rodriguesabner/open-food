@@ -1,73 +1,97 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Open Food
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Sincrone e gerencie dados de produtos alimentares de forma eficiente e automatizada
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This is a challenge by Coodesh
 
-## Description
+## Tecnologias e Ferramentas Utilizadas
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Linguagem: TypeScript
+- Framework: NestJS
+- Banco de Dados: MongoDB
+- Containerização: Docker e Docker Compose
+- Agendamento de Tarefas: Tarefas cron agendadas com @nestjs/schedule
+- Gerenciamento de Dependências: npm
 
-## Installation
+## Instruções de Uso
 
-```bash
-$ npm install
-```
+### Pré-requisitos
 
-## Running the app
+- Docker
+- Docker Compose
+- Node.js
+- npm
 
-```bash
-# development
-$ npm run start
+### Instalação
 
-# watch mode
-$ npm run start:dev
+1. Clone o repositório
+2. Execute o comando `npm install` para instalar as dependências
+3. Execute o comando `docker-compose up` para iniciar o banco de dados MongoDB
 
-# production mode
-$ npm run start:prod
-```
+### Execução
 
-## Test
+Como estamos usando docker compose, não é necessário executar de forma manual.
 
-```bash
-# unit tests
-$ npm run test
+### Testes
 
-# e2e tests
-$ npm run test:e2e
+1. Execute o comando `npm run test` para rodar os testes unitários
 
-# test coverage
-$ npm run test:cov
-```
+### Documentação
 
-## Support
+1. Ao iniciar a aplicação, a documentação estará disponível em `http://localhost:3005/api`
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Extras realizados:
 
-## Stay in touch
+- [ ] Endpoint de busca com Elastic/Similar
+- [x] Configuração do docker
+- [x] Alerta de falha (email)
+- [x] Documentação da API usando Open API 3.0
+- [x] Testes unitários para GET/PUT/DELETE
+- [x] API Key - autenticação [51d5c2e9-45ea-4756-b879-22ffeeed0c36]
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Processo de investigação + resolução
 
-## License
+1. Início do projeto <br/>
 
-Nest is [MIT licensed](LICENSE).
+Desde o início até o final, fiz bastante consulta na documentação do [NestJS](https://docs.nestjs.com/)
+
+Pra começar, foi decidido usar NestJS, a escolha do framework foi baseada na facilidade de uso e na estrutura de pastas
+que ele fornece, o que facilita a organização do código.
+
+Próximo foi entender de fato o que era necessário pra resolução da atividade.
+
+Baseado no link: https://github.com/rodriguesabner/open-food/blob/master/products.json
+Criei a DTO que definiria a estrutura dos arquivos a serem importados/atualizados.
+
+2. Importação do arquivo, aqui levei um tempo considerável na tarefa. <br/>
+
+A princípio pensei em deixar tudo em memória, mas notei uma lentidão maior no processo, fora que ainda tinha que
+realizar a descompactação do arquivo.
+
+Decidi então armazenar dentro da pasta ./tmp. Primeiro realizo o download do zip (arquivos listados no link).
+Depois descompacto, deleto o zip e processo o json.
+
+Pensei também em deixar a CRON dentro de products.service, mas fugia totalmente da
+responsabilidade do serviço. Criei então o cron.service para lidar com isso.
+
+Quando realizei a descompactação do arquivo e fui realizar a leitura, me deparei com o problema de ler vários arquivos com 1gb+.
+
+Então decidi ler o arquivo linha a linha, e quando chegasse na centésima linha, parar a leitura.
+Depois de algumas -longas e falhas- tentativas de importar e converter o arquivo, percebi que tinham alguns dados que
+estavam me complicando `(""\r)`", então decidi fazer um replace `chunk.replace(/[;\r]/g, '').replaceAll(/\\"/g, '');`.
+
+Depois disso consegui andar mais rápido nas outras demandas do projeto.
+
+3. Criação de endpoints <br/>
+
+Criei os endpoints solicitados + testes, sem complicações.
+
+4. Configuração do Docker <br/>
+
+Fiz a configuração do Docker e Docker Compose, tive um pouco de dificuldade ao conectar com o banco em alguns momentos, mas parecia ser
+algo da minha máquina.
+
+5. Alerta de falha <br/>
+
+Fiz a configuração do envio de email, testei e funcionou.
+![img.png](img.png)
