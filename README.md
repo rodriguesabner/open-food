@@ -30,15 +30,25 @@ This is a challenge by Coodesh
 
 ### Execução
 
-Crie o arquivo .env, deixe alguns itens já predefinidos.
+Crie o arquivo .env, deixe alguns itens já predefinidos no `.template`.
+Basta rodar:
 
-cp .env.template .env
+`cp .env.template .env`
 
 ------
 
 Como estamos usando docker compose, não é necessário executar de forma manual.
 
-a API_KEY é: 51d5c2e9-45ea-4756-b879-22ffeeed0c36
+Para testar os endpoints, usar a API_KEY: `51d5c2e9-45ea-4756-b879-22ffeeed0c36`
+
+### Cron
+
+Deixei a CRON configurada pra todar todos os dias, a meia noite. E como solicitado, deixei de forma
+dinâmica a execução.
+
+A configuração está no .env
+
+`CRON_EXPRESSION="*/1 * * * *"` - Basta alterar esse valor.
 
 ### Testes
 
