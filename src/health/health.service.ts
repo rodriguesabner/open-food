@@ -46,7 +46,7 @@ export class HealthService {
       .sort({ createdAt: -1 })
       .exec();
 
-    return lastCron.toJSON()
+    return lastCron
       ? lastCron.endedAt.toISOString()
       : 'CRON não executado ainda';
   }

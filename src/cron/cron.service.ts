@@ -2,9 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CronLog } from './schemas/cron.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { CronExpression, SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 import { Product } from '../products/schemas/products.schema';
 import { CronUtils } from './cron.utils';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 class CronService {
@@ -15,9 +17,25 @@ class CronService {
     private readonly cronLogModel: Model<CronLog>,
     @InjectModel(Product.name) private readonly productModel: Model<Product>,
     private readonly cronUtils: CronUtils,
-  ) {}
+    private readonly configService: ConfigService,
+    private readonly schedulerRegistry: SchedulerRegistry,
+  ) {
+    this.addCronJob();
+  }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  addCronJob() {
+    const cronSchedule =
+      this.configService.get<string>('CRON_SCHEDULE') ||
+      CronExpression.EVERY_DAY_AT_MIDNIGHT;
+
+    const job = new CronJob(cronSchedule, async () => {
+      await this.handleSyncProducts();
+    });
+
+    this.schedulerRegistry.addCronJob('handleSyncProducts', job);
+    job.start();
+  }
+
   async handleSyncProducts() {
     const startTime = new Date();
     let productsProcessed = 0;
