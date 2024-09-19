@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  app:
+    container_name: nest-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3005:3005'
+    environment:
+      - MONGO_URI=mongodb://root:abner@mongo:27017/open-food?authSource=admin
+      - API_KEY=${API_KEY}
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+    networks:
+      - nest-network
+
+  mongo:
+    image: mongo:latest
+    container_name: mongo-db
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: abner
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - nest-network
+
+networks:
+  nest-network:
+    driver: host
+
+volumes:
+  mongo-data:
+    driver: local

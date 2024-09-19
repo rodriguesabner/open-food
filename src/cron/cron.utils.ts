@@ -84,11 +84,13 @@ class CronUtils {
   }
 
   async fetchFilesList(): Promise<string[]> {
-    return ['products_01.json.gz'];
-    // const { data } = await this.httpRef.get('/index.txt');
-    // if (!data) throw new Error('Error getting files');
-    //
-    // return data.toString().trim().split('\n').filter(Boolean);
+    // Apenas para teste
+    // return ['products_01.json.gz'];
+
+    const { data } = await this.httpRef.get('/index.txt');
+    if (!data) throw new Error('Error getting files');
+
+    return data.toString().trim().split('\n').filter(Boolean);
   }
 
   async downloadAndSaveFile(file: string, tmpDir: string): Promise<string> {
