@@ -43,7 +43,7 @@ describe('ProductsController', () => {
       return mockProducts.slice(start, end);
     });
     mockProductsService.findOne.mockImplementation((code) =>
-      mockProducts.find((product) => product.code === code.code),
+      mockProducts.find((product) => product.code === code),
     );
     mockProductsService.update.mockImplementation((code, dto) => ({
       ...mockProducts.find((product) => product.code === code),
@@ -107,14 +107,14 @@ describe('ProductsController', () => {
 
   describe('findOne', () => {
     it('should call service.findOne and return a product with code 1', async () => {
-      const result = await controller.findOne({ code: 1 });
-      expect(service.findOne).toHaveBeenCalledWith({ code: 1 });
+      const result = await controller.findOne(1);
+      expect(service.findOne).toHaveBeenCalledWith(1);
       expect(result).toEqual(mockProducts[0]);
     });
 
     it('should call service.findOne and get error to return a product with code 999', async () => {
-      const result = await controller.findOne({ code: 999 });
-      expect(service.findOne).toHaveBeenCalledWith({ code: 999 });
+      const result = await controller.findOne(999);
+      expect(service.findOne).toHaveBeenCalledWith(999);
       expect(result).not.toBeDefined();
     });
   });

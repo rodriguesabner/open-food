@@ -74,18 +74,13 @@ class CronService {
         }
       }
 
-      await this.createLog('success', productsProcessed, startTime);
       this.logger.log('Products imported successfully.');
       this.cronUtils.clearTmpDir();
+      this.createLog('success', productsProcessed, startTime);
     } catch (error) {
       this.logger.error('Error importing products', error);
       this.cronUtils.clearTmpDir();
-      await this.createLog(
-        'failure',
-        productsProcessed,
-        startTime,
-        error.message,
-      );
+      this.createLog('failure', productsProcessed, startTime, error.message);
     }
   }
 
