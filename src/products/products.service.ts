@@ -17,8 +17,8 @@ export class ProductsService {
       .limit(limit);
   }
 
-  async findOne(productDto: Partial<ProductDto>): Promise<Product> {
-    return this.productModel.findOne({ code: productDto.code });
+  async findOne(code: number): Promise<Product> {
+    return this.productModel.findOne({ code: code });
   }
 
   async update(
